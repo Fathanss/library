@@ -1,25 +1,26 @@
 import { NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
+import { Pool } from 'pg'
 
 const connectionString = process.env.DATABASE_URL
 if (!connectionString) {
   throw new Error('DATABASE_URL environment variable is missing')
 }
 
-const adapter = new PrismaPg({ connectionString })
-
-// 2. Pass the adapter to the PrismaClient constructor
+const pool = new Pool({ connectionString })
+const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
-// GET: Fetch all location
-export async function GET() {
 
+// GET: Fetch all history
+export async function GET() {
   try {
-    const location = await prisma.location.findMany({
+    const history = await prisma.history.findMany({
       select: {
         id: true,
-        full_name: true,
+        book_id: true,
+        notes: true,
+        status: true,
         created_at: true,
         updated_at: true,
       },
@@ -28,9 +29,9 @@ export async function GET() {
       },
     })
 
-    return NextResponse.json({ success: true, data: location }, { status: 200 })
+    return NextResponse.json({ success: true, data: history }, { status: 200 })
   } catch (error) {
-    console.error('Failed to fetch location:', error)
+    console.error('Failed to fetch history:', error)
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -38,49 +39,52 @@ export async function GET() {
   }
 }
 
-// POST: Create a new location
+// POST: Create a new history
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { full_name } = body
+    const { notes, book_id, status } = body
 
-    if (!full_name) {
+    // PERBAIKAN: !status sudah dihapus dari sini
+    if ( !book_id || !notes) {
       return NextResponse.json(
         { success: false, message: 'Missing required fields' },
         { status: 400 }
       )
     }
 
-    // Check if location already exists
-    const existingLocation = await prisma.location.findFirst({
-      where: { full_name },
-    })
-
-    if (existingLocation) {
+    // Validasi jika status yang dikirim valid (hanya dicek jika status dikirim frontend)
+    const validStatuses = ['available', 'borrowed', 'lost'];
+    if (status && !validStatuses.includes(status)) {
       return NextResponse.json(
-        { success: false, message: 'Location already exists' },
+        { success: false, message: 'Invalid status value' },
         { status: 400 }
       )
     }
-    // Save to Supabase
-    const newUser = await prisma.location.create({
+
+    // Save to Database
+    const newHistory = await prisma.history.create({
       data: {
-        full_name,
+        book_id,
+        notes,
+        status: status || 'available', 
       },
       select: {
         id: true,
-        full_name: true,
+        book_id: true,
+        notes: true,
+        status: true,
         created_at: true,
         updated_at: true,
       },
     })
 
     return NextResponse.json(
-      { success: true, message: 'User created successfully', data: newUser },
+      { success: true, message: 'History created successfully', data: newHistory },
       { status: 201 }
     )
   } catch (error) {
-    console.error('Failed to create user:', error)
+    console.error('Failed to create history:', error)
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

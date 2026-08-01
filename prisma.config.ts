@@ -6,11 +6,11 @@ import { defineConfig } from "prisma/config";
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
-    seed: 'tsx prisma/seedUser.ts',
+    seed: 'tsx prisma/seed.ts',
   },
   datasource: {
     url: process.env["DATABASE_URL"],
   },
 });
 
-//jjkfdudfjoizoe5hhduyruyruhhbvhww1hfhhhhdhd878r7 rvjf                                                                                                                                                                                          hhfdhfgdhhdgdhggdgfdghdgdgdgdydhddhfhdhdghgVXNBDUHHFBCKOJDK
+//jjkfdudfjoizoe5hhduyruyruhhbvhww1hfhhhhdhd878r7 rvjf                                                             
