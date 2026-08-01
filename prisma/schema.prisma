@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model book {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name   String     @db.VarChar(100)
+  description String     @db.VarChar(255)
+  code_book   String     @db.VarChar(100)
+  location_id String     @db.Uuid
+  status      String     @db.VarChar(100)
+  created_at  DateTime?  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?  @db.Timestamptz(6)
+  location    location   @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_location")
+  borrower    borrower[]
+  history     history[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model borrower {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  book_id     String    @db.Uuid
+  no_hp       Decimal   @db.Decimal
+  full_name   String    @db.VarChar(255)
+  time_borrow DateTime? @db.Timestamptz(6)
+  time_return DateTime? @db.Timestamptz(6)
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @db.Timestamptz(6)
+  book        book      @relation(fields: [book_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_book")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model history {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  book_id    String    @db.Uuid
+  status     String    @db.VarChar(255)
+  notes      String    @db.VarChar(255)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+  book       book      @relation(fields: [book_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_book_id")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model location {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name  String    @db.VarChar(100)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+  book       book[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model users {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name  String    @db.VarChar(100)
+  email      String    @unique @db.VarChar(255)
+  password   String?   @db.VarChar(255)
+  role       String?   @db.VarChar(50)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+}
