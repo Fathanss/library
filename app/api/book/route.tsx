@@ -33,8 +33,9 @@ export async function GET() {
       },
     })
 
-    return NextResponse.json({ success: true, data: books }, { status: 200 })
-  } catch (error) {
+// Kode API kamu
+return NextResponse.json({ success: true, data: books }, { status: 200 })  
+} catch (error) {
     console.error('Failed to fetch books:', error)
     return NextResponse.json(
       { success: false, message: 'Internal server error' },

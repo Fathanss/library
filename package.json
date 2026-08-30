@@ -11,12 +11,14 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
-    "lucide-react": "^1.31.0",
+    "lucide-react": "^1.37.0",
     "mysql2": "^3.15.2",
     "next": "15.5.0",
     "pg": "^8.23.0",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "sweetalert2": "^11.26.25",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
