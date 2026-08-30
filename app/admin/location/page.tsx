@@ -4,12 +4,10 @@ import { useState, useEffect, FormEvent } from 'react';
 import { Plus, Search, Edit2, Trash2, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import Swal from 'sweetalert2';
 
-interface History {
+// 1. Menggunakan PascalCase untuk Interface TypeScript
+interface Location {
   id: number;
-  book_id: number;
-  status: 'borrowed' | 'returned';
-  notes: string;
-  book_title: string;
+  full_name: string;
 }
 
 interface PostApiResponse {
@@ -19,8 +17,9 @@ interface PostApiResponse {
   userId: number;
 }
 
-export default function HistoryPage() {
-  const [history, setHistory] = useState<History[]>([]);
+export default function LocationsPage() {
+  // 2. Merapikan penamaan state agar konsisten (locations, setLocations)
+  const [locations, setLocations] = useState<Location[]>([]);
   const [search, setSearch] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 5;
@@ -28,44 +27,30 @@ export default function HistoryPage() {
   // Offcanvas state
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [currentBookId, setCurrentBookId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<Omit<History, 'id'>>({
-    book_id: 0,
-    status: 'borrowed',
-    notes: '',
-    book_title: '',
+  const [currentLocationId, setCurrentLocationId] = useState<number | null>(null);
+  const [formData, setFormData] = useState<{ full_name: string }>({
+    full_name: '',
   });
 
-  // Fetch dummy data from JSONPlaceholder API
+  // Fetch dummy data dari JSONPlaceholder API
   useEffect(() => {
     fetch('https://jsonplaceholder.typicode.com/posts?_limit=12')
       .then((res) => res.json())
       .then((data: PostApiResponse[]) => {
-        const mappedHistory: History[] = data.map((item) => ({
+        const mappedLocations: Location[] = data.map((item, number) => ({
           id: item.id,
-          book_id: item.id,
-          status: 'borrowed',
-          notes: 'No notes',
-          book_title: item.title.slice(0, 30),
+          full_name: `rak ${number + 1}`,
         }));
-        setHistory(mappedHistory);
+        setLocations(mappedLocations);
       });
   }, []);
 
   // Filter & Pagination logic
-  const filteredHistory = history.filter(
-    (b) =>
-      b.book_title.toLowerCase().includes(search.toLowerCase()) ||
-      b.notes.toLowerCase().includes(search.toLowerCase())
+  const filteredLocations = locations.filter((loc) =>
+    loc.full_name.toLowerCase().includes(search.toLowerCase())
   );
-
-  // Auto reset page when search query changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search]);
-
-  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage) || 1;
-  const paginatedHistory = filteredHistory.slice(
+  const totalPages = Math.ceil(filteredLocations.length / itemsPerPage) || 1;
+  const paginatedLocations = filteredLocations.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -73,36 +58,31 @@ export default function HistoryPage() {
   // Open Create Offcanvas
   const handleOpenCreate = () => {
     setIsEditing(false);
-    setFormData({ book_id: Date.now(), book_title: '', status: 'borrowed', notes: '' });
+    setFormData({ full_name: '' });
     setIsOffcanvasOpen(true);
   };
 
   // Open Edit Offcanvas
-  const handleOpenEdit = (historyItem: History) => {
+  const handleOpenEdit = (loc: Location) => {
     setIsEditing(true);
-    setCurrentBookId(historyItem.id);
-    setFormData({
-      book_id: historyItem.book_id,
-      book_title: historyItem.book_title,
-      status: historyItem.status,
-      notes: historyItem.notes,
-    });
+    setCurrentLocationId(loc.id);
+    setFormData({ full_name: loc.full_name });
     setIsOffcanvasOpen(true);
   };
 
   // Handle Form Submit (Create / Update)
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isEditing && currentBookId !== null) {
-      setHistory(history.map((b) => (b.id === currentBookId ? { ...b, ...formData } : b)));
-      Swal.fire({ icon: 'success', title: 'Updated!', text: 'History updated successfully', timer: 1500, showConfirmButton: false });
+    if (isEditing && currentLocationId !== null) {
+      setLocations(locations.map((loc) => (loc.id === currentLocationId ? { ...loc, ...formData } : loc)));
+      Swal.fire({ icon: 'success', title: 'Updated!', text: 'Location updated successfully', timer: 1500, showConfirmButton: false });
     } else {
-      const newHistory: History = {
+      const newLocation: Location = {
         id: Date.now(),
-        ...formData,
+        full_name: formData.full_name,
       };
-      setHistory([newHistory, ...history]);
-      Swal.fire({ icon: 'success', title: 'Created!', text: 'History added successfully', timer: 1500, showConfirmButton: false });
+      setLocations([newLocation, ...locations]);
+      Swal.fire({ icon: 'success', title: 'Created!', text: 'Location added successfully', timer: 1500, showConfirmButton: false });
     }
     setIsOffcanvasOpen(false);
   };
@@ -110,7 +90,7 @@ export default function HistoryPage() {
   // Handle Delete with SweetAlert
   const handleDelete = (id: number) => {
     Swal.fire({
-      title: 'Delete History?',
+      title: 'Delete Location?',
       text: 'You cannot undo this action after it is deleted.',
       icon: 'warning',
       showCancelButton: true,
@@ -119,8 +99,8 @@ export default function HistoryPage() {
       confirmButtonText: 'Yes, Delete',
     }).then((result) => {
       if (result.isConfirmed) {
-        setHistory(history.filter((b) => b.id !== id));
-        Swal.fire({ icon: 'success', title: 'Deleted!', text: 'History has been deleted.', timer: 1500, showConfirmButton: false });
+        setLocations(locations.filter((loc) => loc.id !== id));
+        Swal.fire({ icon: 'success', title: 'Deleted!', text: 'Location has been deleted.', timer: 1500, showConfirmButton: false });
       }
     });
   };
@@ -129,15 +109,15 @@ export default function HistoryPage() {
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">History Management</h1>
-          <p className="text-sm text-slate-500">Manage your borrowing history efficiently</p>
+          <h1 className="text-2xl font-bold text-slate-800">Location Management</h1>
+          <p className="text-sm text-slate-500">Manage your library catalog locations efficiently</p>
         </div>
         <button
           onClick={handleOpenCreate}
           className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-lg shadow-indigo-100"
         >
           <Plus size={18} />
-          <span>Add New History</span>
+          <span>Add New Location</span>
         </button>
       </div>
 
@@ -152,8 +132,11 @@ export default function HistoryPage() {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by title or notes..."
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder="Search by location name..."
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
             />
           </div>
@@ -164,40 +147,25 @@ export default function HistoryPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/70 border-b border-slate-100 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                <th className="py-3.5 px-6">Book ID</th>
-                <th className="py-3.5 px-6">Book Title</th>
-                <th className="py-3.5 px-6">Notes</th>
-                <th className="py-3.5 px-6">Status</th>
+                <th className="py-3.5 px-6">Location Name</th>
+                {/* 3. Menambahkan header aksi agar tidak offset */}
                 <th className="py-3.5 px-6 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
-              {paginatedHistory.length > 0 ? (
-                paginatedHistory.map((historyItem) => (
-                  <tr key={historyItem.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-4 px-6 font-medium text-slate-800">{historyItem.book_id}</td>
-                    <td className="py-4 px-6 text-slate-600">{historyItem.book_title}</td>
-                    <td className="py-4 px-6 text-slate-600">{historyItem.notes || '-'}</td>
-                    <td className="py-4 px-6">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                          historyItem.status === 'borrowed'
-                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        }`}
-                      >
-                        {historyItem.status}
-                      </span>
-                    </td>
+              {paginatedLocations.length > 0 ? (
+                paginatedLocations.map((loc) => (
+                  <tr key={loc.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-6 font-medium text-slate-800">{loc.full_name}</td>
                     <td className="py-4 px-6 text-right space-x-2">
                       <button
-                        onClick={() => handleOpenEdit(historyItem)}
+                        onClick={() => handleOpenEdit(loc)}
                         className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button
-                        onClick={() => handleDelete(historyItem.id)}
+                        onClick={() => handleDelete(loc.id)}
                         className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
                       >
                         <Trash2 size={16} />
@@ -207,8 +175,9 @@ export default function HistoryPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-400">
-                    No history found.
+                  {/* Perbaikan colSpan menjadi 2 sesuai jumlah kolom */}
+                  <td colSpan={2} className="py-8 text-center text-slate-400">
+                    No locations found.
                   </td>
                 </tr>
               )}
@@ -240,7 +209,7 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      {/* Right-to-Left Offcanvas Form */}
+      {/* Offcanvas Form */}
       {isOffcanvasOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           <div
@@ -252,7 +221,7 @@ export default function HistoryPage() {
             <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
               <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-slate-800">
-                  {isEditing ? 'Edit History' : 'Add New History'}
+                  {isEditing ? 'Edit Location' : 'Add New Location'}
                 </h2>
                 <button
                   onClick={() => setIsOffcanvasOpen(false)}
@@ -262,48 +231,18 @@ export default function HistoryPage() {
                 </button>
               </div>
 
-              {/* Form Section */}
               <form onSubmit={handleSubmit} className="flex-1 p-6 space-y-4 overflow-y-auto">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                    Book Title
+                    Location Name
                   </label>
                   <input
                     type="text"
                     required
-                    value={formData.book_title}
-                    onChange={(e) => setFormData({ ...formData, book_title: e.target.value })}
+                    value={formData.full_name}
+                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
-                    placeholder="Enter book title"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                    Status
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) =>
-                      setFormData({ ...formData, status: e.target.value as 'borrowed' | 'returned' })
-                    }
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
-                  >
-                    <option value="borrowed">Borrowed</option>
-                    <option value="returned">Returned</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                    Notes
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all resize-none"
-                    placeholder="Enter notes"
+                    placeholder="Enter location name"
                   />
                 </div>
 
@@ -319,7 +258,7 @@ export default function HistoryPage() {
                     type="submit"
                     className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-indigo-100"
                   >
-                    {isEditing ? 'Save Changes' : 'Create History'}
+                    {isEditing ? 'Save Changes' : 'Create Location'}
                   </button>
                 </div>
               </form>

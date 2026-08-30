@@ -30,6 +30,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
    { name: 'Books', href: '/admin/books', icon: BookOpen },
    { name: 'Borrowers', href: '/admin/borrower', icon: BookOpen },
    { name: 'History', href: '/admin/history', icon: BookOpen },
+   { name: 'Locations', href: '/admin/location', icon: BookOpen },
  ];
 
 
