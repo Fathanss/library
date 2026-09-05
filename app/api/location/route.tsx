@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
@@ -76,11 +75,11 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json(
-      { success: true, message: 'User created successfully', data: newUser },
+      { success: true, message: 'Location created successfully', data: newUser },
       { status: 201 }
     )
   } catch (error) {
-    console.error('Failed to create user:', error)
+    console.error('Failed to create location:', error)
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

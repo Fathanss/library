@@ -7,9 +7,9 @@ import {
   LayoutDashboard,
   BookOpen,
   LogOut,
-  Handshake,
+  UsersRound,
   Clock,
-  Locate,
+  MapPin,
   LucideIcon,
   Sparkles,
   ChevronRight,
@@ -34,9 +34,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const navItems: NavItem[] = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Books', href: '/admin/books', icon: BookOpen },
-    { name: 'Borrowers', href: '/admin/borrower', icon: Handshake },
-    { name: 'Borrowing History', href: '/admin/borrowing-history', icon: Clock },
-    { name: 'Locations', href: '/admin/location', icon: Locate },
+    { name: 'Borrowers', href: '/admin/borrower', icon: UsersRound },
+    { name: 'History', href: '/admin/history', icon: Clock },
+    { name: 'Locations', href: '/admin/location', icon: MapPin },
   ];
 
   const handleLogout = () => {

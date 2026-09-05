@@ -8,9 +8,11 @@ import Swal from 'sweetalert2';
 
 interface Book {
  id: number;
- title: string;
- author: string;
- year: number;
+ full_name: string;
+ description: string;
+ code_book: string;
+ location_id: string;
+ status: string;
 }
 
 
@@ -33,34 +35,22 @@ export default function BooksPage() {
  const [isOffcanvasOpen, setIsOffcanvasOpen] = useState<boolean>(false);
  const [isEditing, setIsEditing] = useState<boolean>(false);
  const [currentBookId, setCurrentBookId] = useState<number | null>(null);
- const [formData, setFormData] = useState<{ title: string; author: string; year: string | number }>({
-   title: '',
-   author: '',
-   year: '',
+ const [formData, setFormData] = useState<{ full_name: string;}>({
+   full_name: '',
  });
 
-
- // Fetch dummy data from JSONPlaceholder API
- useEffect(() => {
-   fetch('https://jsonplaceholder.typicode.com/posts?_limit=12')
-     .then((res) => res.json())
-     .then((data: PostApiResponse[]) => {
-       const mappedBooks: Book[] = data.map((item, idx) => ({
-         id: item.id,
-         title: item.title.slice(0, 30),
-         author: `Author ${idx + 1}`,
-         year: 2020 + (idx % 5),
-       }));
-       setBooks(mappedBooks);
-     });
- }, []);
-
+  useEffect(() => {
+    fetch('/api/books')
+      .then((res) => res.json())
+      .then((response) => {
+        setBooks(response.data);
+      });
+  }, []);
 
  // Filter & Pagination logic
  const filteredBooks = books.filter(
    (b) =>
-     b.title.toLowerCase().includes(search.toLowerCase()) ||
-     b.author.toLowerCase().includes(search.toLowerCase())
+     b.full_name.toLowerCase().includes(search.toLowerCase())
  );
  const totalPages = Math.ceil(filteredBooks.length / itemsPerPage) || 1;
  const paginatedBooks = filteredBooks.slice(
@@ -72,7 +62,7 @@ export default function BooksPage() {
  // Open Create Offcanvas
  const handleOpenCreate = () => {
    setIsEditing(false);
-   setFormData({ title: '', author: '', year: '' });
+   setFormData({ full_name: '' });
    setIsOffcanvasOpen(true);
  };
 
@@ -81,7 +71,7 @@ export default function BooksPage() {
  const handleOpenEdit = (book: Book) => {
    setIsEditing(true);
    setCurrentBookId(book.id);
-   setFormData({ title: book.title, author: book.author, year: book.year });
+   setFormData({ full_name: book.full_name });
    setIsOffcanvasOpen(true);
  };
 
@@ -90,14 +80,16 @@ export default function BooksPage() {
  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
    e.preventDefault();
    if (isEditing && currentBookId !== null) {
-     setBooks(books.map((b) => (b.id === currentBookId ? { ...b, ...formData, year: Number(formData.year) } : b)));
+     setBooks(books.map((b) => (b.id === currentBookId ? { ...b, ...formData } : b)));
      Swal.fire({ icon: 'success', title: 'Updated!', text: 'Book updated successfully', timer: 1500, showConfirmButton: false });
    } else {
      const newBook: Book = {
        id: Date.now(),
-       title: String(formData.title),
-       author: String(formData.author),
-       year: Number(formData.year),
+       full_name: formData.full_name,
+       description: formData.description,
+       code_book: formData.code_book,
+       location_id: formData.location_id,
+       status: formData.status,
      };
      setBooks([newBook, ...books]);
      Swal.fire({ icon: 'success', title: 'Created!', text: 'Book added successfully', timer: 1500, showConfirmButton: false });
