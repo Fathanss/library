@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const navItems: NavItem[] = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Books', href: '/admin/books', icon: BookOpen },
+    { name: 'Books', href: '/admin/book', icon: BookOpen },
     { name: 'Borrowers', href: '/admin/borrower', icon: UsersRound },
     { name: 'History', href: '/admin/history', icon: Clock },
     { name: 'Locations', href: '/admin/location', icon: MapPin },

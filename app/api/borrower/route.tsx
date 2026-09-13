@@ -17,21 +17,23 @@ const prisma = new PrismaClient({ adapter })
 // GET: Fetch all borrower
 export async function GET() {
   try {
-    const borrowers = await prisma.borrower.findMany({
+    const borrower = await prisma.borrower.findMany({
       select: {
         id: true,
         full_name: true,
-        book_id: true,
+        book: true,
         no_hp: true,
         time_borrow: true,
         time_return: true,
         created_at: true,
         updated_at: true,
       },
-      orderBy: {
-        created_at: 'desc',
-      },
     })
+
+    const borrowers = borrower.map(({ book, ...borrowerData }) => ({
+      ...borrowerData,
+      book_id: book.full_name,
+    }))
 
     return NextResponse.json({ success: true, data: borrowers }, { status: 200 })
   } catch (error) {
@@ -47,9 +49,10 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { full_name, book_id, no_hp, time_borrow, time_return } = body
+    const book = "8c74ce43-e8d7-44a2-9c67-17e0b01645eb" // Contoh book_id, sesuaikan dengan kebutuhan
+    const { full_name, no_hp, time_borrow, time_return } = body
 
-    if (!full_name || !book_id || !no_hp || !time_borrow || !time_return) {
+    if (!full_name) {
       return NextResponse.json(
         { success: false, message: 'Missing required fields' },
         { status: 400 }
@@ -74,15 +77,15 @@ export async function POST(request: Request) {
     const newBorrower = await prisma.borrower.create({ // Ubah nama variabel dari newUser ke newBook
       data: {
         full_name,
-        book_id,
+        book_id: book,
         no_hp,
-        time_borrow,
-        time_return,
+        time_borrow : new Date(time_borrow),
+        time_return: new Date(time_return),
       },
       select: {
         id: true,
         full_name: true,
-        book_id: true,
+        book: true,
         no_hp: true,
         time_borrow: true,
         time_return: true,
@@ -90,6 +93,11 @@ export async function POST(request: Request) {
         updated_at: true,
       },
     })
+
+    const createdBorrower = {
+      ...newBorrower,
+      book: newBorrower.book.full_name,
+    }
 
     return NextResponse.json(
       { success: true, message: 'Borrower created successfully', data: newBorrower },
