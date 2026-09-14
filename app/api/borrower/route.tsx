@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { Pool } from 'pg' // 1. Tambahkan import Pool dari 'pg'
-//book_id,no_hp,full_name,time_borrow,time_return//
+
 const connectionString = process.env.DATABASE_URL
 if (!connectionString) {
   throw new Error('DATABASE_URL environment variable is missing')
 }
 
-// 2. Buat instance Pool, lalu masukkan ke PrismaPg
-const pool = new Pool({ connectionString })
-const adapter = new PrismaPg(pool)
+const adapter = new PrismaPg({ connectionString })
 
 const prisma = new PrismaClient({ adapter })
 
@@ -32,7 +29,7 @@ export async function GET() {
 
     const borrowers = borrower.map(({ book, ...borrowerData }) => ({
       ...borrowerData,
-      book_id: book.full_name,
+      book: book.full_name,
     }))
 
     return NextResponse.json({ success: true, data: borrowers }, { status: 200 })
@@ -49,8 +46,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const book = "8c74ce43-e8d7-44a2-9c67-17e0b01645eb" // Contoh book_id, sesuaikan dengan kebutuhan
-    const { full_name, no_hp, time_borrow, time_return } = body
+    const { full_name, no_hp, time_borrow, time_return, book_id } = body
 
     if (!full_name) {
       return NextResponse.json(
@@ -59,7 +55,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Optional: Validasi jika status yang dikirim valid
 
     // Check if book already exists (berdasarkan full_name)
     const existingBorrower = await prisma.borrower.findFirst({
@@ -74,13 +69,13 @@ export async function POST(request: Request) {
     }
     
     // Save to Database
-    const newBorrower = await prisma.borrower.create({ // Ubah nama variabel dari newUser ke newBook
+    const newUsers = await prisma.borrower.create({ // Ubah nama variabel dari newUser ke newBook
       data: {
         full_name,
-        book_id: book,
+        book_id,
         no_hp,
-        time_borrow : new Date(time_borrow),
-        time_return: new Date(time_return),
+        time_borrow: new Date(time_borrow),//khsus untuk time_borrow, karena harus diubah menjadi tipe data Date
+        time_return: time_return ? new Date(time_return) : null,
       },
       select: {
         id: true,
@@ -95,12 +90,12 @@ export async function POST(request: Request) {
     })
 
     const createdBorrower = {
-      ...newBorrower,
-      book: newBorrower.book.full_name,
+      ...newUsers,
+      book: newUsers.book.full_name,
     }
 
     return NextResponse.json(
-      { success: true, message: 'Borrower created successfully', data: newBorrower },
+      { success: true, message: 'Borrower created successfully', data: createdBorrower },
       { status: 201 }
     )
   } catch (error) {

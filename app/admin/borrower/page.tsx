@@ -11,28 +11,38 @@ import {
   X,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import Select from "react-select";
+import { Book, bookService } from "@/services/bookService";
 import { Borrower, borrowerService } from "@/services/borrowerService";
+
+interface SelectOption {
+ value: string;
+ label: string;
+}
 
 export default function BorrowersPage() {
   const [borrowers, setBorrowers] = useState<Borrower[]>([]);
   const [search, setSearch] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [Books, setBooks] = useState<Book[]>([]);
   const itemsPerPage = 5;
 
   // Offcanvas state
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [currentBorrowerId, setCurrentBorrowerId] = useState<number | null>(null);
+  const [currentBorrowerId, setCurrentBorrowerId] = useState<number | null>(
+    null,
+  );
   const [formData, setFormData] = useState<{
     full_name: string;
-    book: string;
+    book_id: string;
     no_hp: string;
     time_borrow: string;
     time_return: string;
   }>({
     full_name: "",
-    book: "",
+    book_id: "",
     no_hp: "",
     time_borrow: "",
     time_return: "",
@@ -40,13 +50,24 @@ export default function BorrowersPage() {
 
   // Initial load
   useEffect(() => {
-    borrowerService
-      .getAll()
-      .then((data) => setBorrowers(data))
-      .catch((err) => {
-        Swal.fire({ icon: "error", title: "Error", text: err.message });
+    Promise.all([borrowerService.getAll(), bookService.getAll()])
+      .then(([borrowersData, booksData]) => {
+        setBorrowers(borrowersData);
+        setBooks(booksData);
+      })
+      .catch((error) => {
+        Swal.fire({
+          icon: "error",
+          title: "Load Failed",
+          text: error.message,
+        });
       });
   }, []);
+
+  const bookOptions: SelectOption[] = Books.map((book) => ({
+    value: String(book.id),
+    label: book.full_name,
+  }));
 
   // Filter & Pagination logic
   const filteredBorrowers = borrowers.filter((borrower) =>
@@ -64,7 +85,7 @@ export default function BorrowersPage() {
     setCurrentBorrowerId(null);
     setFormData({
       full_name: "",
-      book: "",
+      book_id: "",
       no_hp: "",
       time_borrow: "",
       time_return: "",
@@ -73,17 +94,21 @@ export default function BorrowersPage() {
   };
 
   const handleOpenEdit = (borrower: Borrower) => {
-  setIsEditing(true);
-  setCurrentBorrowerId(borrower.id);
-  setFormData({
-    full_name: borrower.full_name,
-    book: borrower.book_id,
-    no_hp: borrower.no_hp.toString(),
-    time_borrow: borrower.time_borrow ? borrower.time_borrow.toISOString() : '',
-    time_return: borrower.time_return ? borrower.time_return.toISOString() : '',
-  });
-  setIsOffcanvasOpen(true);
-};
+    setIsEditing(true);
+    setCurrentBorrowerId(borrower.id);
+    setFormData({
+      full_name: borrower.full_name,
+      book_id: borrower.book_id,
+      no_hp: borrower.no_hp.toString(),
+      time_borrow: borrower.time_borrow
+        ? borrower.time_borrow.toISOString()
+        : "",
+      time_return: borrower.time_return
+        ? borrower.time_return.toISOString()
+        : "",
+    });
+    setIsOffcanvasOpen(true);
+  };
 
   // Unified Submit: POST or PUT
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -93,9 +118,14 @@ export default function BorrowersPage() {
     try {
       if (isEditing && currentBorrowerId !== null) {
         // API: PUT /api/borrowers/[id]
-        const updated = await borrowerService.update(currentBorrowerId, formData);
+        const updated = await borrowerService.update(
+          currentBorrowerId,
+          formData,
+        );
         setBorrowers((prev) =>
-          prev.map((borrower) => (borrower.id === currentBorrowerId ? updated : borrower)),
+          prev.map((borrower) =>
+            borrower.id === currentBorrowerId ? updated : borrower,
+          ),
         );
         Swal.fire({
           icon: "success",
@@ -161,7 +191,9 @@ export default function BorrowersPage() {
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Borrower Management</h1>
+          <h1 className="text-2xl font-bold text-slate-800">
+            Borrower Management
+          </h1>
           <p className="text-sm text-slate-500">
             Manage your library catalog borrowers efficiently
           </p>
@@ -213,14 +245,28 @@ export default function BorrowersPage() {
                     key={borrower.id}
                     className="hover:bg-slate-50/50 transition-colors"
                   >
-                    <td className="py-4 px-6 font-medium text-slate-800">{borrower.full_name}</td>
-                    <td className="py-4 px-6 font-medium text-slate-800">{borrower.no_hp}</td>
-                    <td className="py-4 px-6 font-medium text-slate-800">{borrower.book_id}</td>
                     <td className="py-4 px-6 font-medium text-slate-800">
-                      {new Date(borrower.time_borrow).toISOString().split('T')[0]}
+                      {borrower.full_name}
                     </td>
                     <td className="py-4 px-6 font-medium text-slate-800">
-                      {new Date(borrower.time_return).toISOString().split('T')[0]}
+                      {borrower.no_hp}
+                    </td>
+                    <td className="py-4 px-6 font-medium text-slate-800">
+                      {borrower.book_id}
+                    </td>
+                    <td className="py-4 px-6 font-medium text-slate-800">
+                      {
+                        new Date(borrower.time_borrow)
+                          .toISOString()
+                          .split("T")[0]
+                      }
+                    </td>
+                    <td className="py-4 px-6 font-medium text-slate-800">
+                      {
+                        new Date(borrower.time_return)
+                          .toISOString()
+                          .split("T")[0]
+                      }
                     </td>
                     <td className="py-4 px-6 text-right space-x-2">
                       <button
@@ -332,20 +378,47 @@ export default function BorrowersPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                     Book
+                    Book
                   </label>
-                  <input
-                    type="text"
-                    required
-                    disabled={isSubmitting}
-                    value={formData.book}
-                    onChange={(e) =>
-                      setFormData({ ...formData, book: e.target.value })
+                  <Select<SelectOption>
+                    isDisabled={isSubmitting}
+                    isClearable
+                    placeholder="Search or Select a book..."
+                    options={bookOptions}
+                    value={
+                      bookOptions.find(
+                        (opt) => opt.value === formData.book_id,
+                      )|| null
                     }
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all disabled:opacity-50"
-                    placeholder="Enter book code"
+                    onChange={(selected) =>
+                      setFormData({
+                        ...formData,
+                        book_id: selected ? selected.value : "",
+                      })
+                    }
+                    styles={{
+                      control: (base, state) => ({
+                        ...base,
+                        backgroundColor: "#f8fafc",
+                        borderColor: state.isFocused ? "#6366f1" : "#e2e8f0",
+                        borderRadius: "0.75rem",
+                        padding: "4px 6px",
+                        boxShadow: state.isFocused
+                          ? "0 0 0 2px rgba(99, 102, 241, 0.2)"
+                          : "none",
+                        "&:hover": {
+                          borderColor: state.isFocused ? "#6366f1" : "#cbd5e1",
+                        },
+                      }),
+                      menu: (base) => ({
+                        ...base,
+                        borderRadius: "0.75rem",
+                        zIndex: 9999, // Keeps dropdown floating above the modal
+                      }),
+                    }}
                   />
                 </div>
+
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
                     Time Borrow
@@ -368,7 +441,6 @@ export default function BorrowersPage() {
                   </label>
                   <input
                     type="datetime-local"
-                    required
                     disabled={isSubmitting}
                     value={formData.time_return}
                     onChange={(e) =>

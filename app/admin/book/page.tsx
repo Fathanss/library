@@ -27,7 +27,6 @@ export default function BooksPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [locations, setLocations] = useState<Location[]>([]);
-
   const itemsPerPage = 5;
 
   // Offcanvas state
