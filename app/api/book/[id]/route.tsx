@@ -62,10 +62,11 @@ export async function DELETE(
    const deletedBook = await prisma.book.delete({
      where: { id: targetId },
      select: {
+       id: true,
        full_name: true,
        description: true,
        code_book: true,
-       location: true,
+       location_id: true,
        status: true,
        created_at: true,
        updated_at: true,
@@ -163,7 +164,7 @@ export async function PUT(
        full_name: true,
        description: true,
        code_book: true,
-       location: true,
+       location_id: true,
        status: true,
        created_at: true,
        updated_at: true,

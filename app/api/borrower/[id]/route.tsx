@@ -18,7 +18,7 @@ type RouteContext = {
 }
 
 
-// DELETE /api/book/[id]
+// DELETE /api/borrower/[id]
 export async function DELETE(
  request: Request,
  context: RouteContext
