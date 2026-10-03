@@ -64,7 +64,7 @@ export default function BooksPage() {
   }, []);
 
   const locationOptions: SelectOption[] = locations.map((loc) => ({
-    value: loc.id,
+    value: String(loc.id),
     label: loc.full_name,
   }));
 

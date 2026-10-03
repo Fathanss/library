@@ -16,8 +16,8 @@ import { Book, bookService } from "@/services/bookService";
 import { Borrower, borrowerService } from "@/services/borrowerService";
 
 interface SelectOption {
- value: string;
- label: string;
+  value: string;
+  label: string;
 }
 
 export default function BorrowersPage() {
@@ -93,22 +93,33 @@ export default function BorrowersPage() {
     setIsOffcanvasOpen(true);
   };
 
-  const handleOpenEdit = (borrower: Borrower) => {
-    setIsEditing(true);
-    setCurrentBorrowerId(borrower.id);
-    setFormData({
-      full_name: borrower.full_name,
-      book_id: borrower.book_id,
-      no_hp: borrower.no_hp.toString(),
-      time_borrow: borrower.time_borrow
-        ? borrower.time_borrow.toISOString()
-        : "",
-      time_return: borrower.time_return
-        ? borrower.time_return.toISOString()
-        : "",
-    });
-    setIsOffcanvasOpen(true);
-  };
+ const formatDateForInput = (date: Date | string | null | undefined): string => {
+  if (!date) return "";
+
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "";
+
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`; // Produces "YYYY-MM-DDTHH:mm"
+};
+
+const handleOpenEdit = (borrower: Borrower) => {
+  setIsEditing(true);
+  setCurrentBorrowerId(borrower.id);
+  setFormData({
+    full_name: borrower.full_name,
+    book_id: borrower.book_id,
+    no_hp: borrower.no_hp.toString(),
+    time_borrow: formatDateForInput(borrower.time_borrow),
+    time_return: formatDateForInput(borrower.time_return),
+  });
+  setIsOffcanvasOpen(true);
+};
 
   // Unified Submit: POST or PUT
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -262,11 +273,11 @@ export default function BorrowersPage() {
                       }
                     </td>
                     <td className="py-4 px-6 font-medium text-slate-800">
-                      {
-                        new Date(borrower.time_return)
-                          .toISOString()
-                          .split("T")[0]
-                      }
+                      {borrower.time_return
+                        ? new Date(borrower.time_return)
+                            .toISOString()
+                            .split("T")[0]
+                        : "-"}
                     </td>
                     <td className="py-4 px-6 text-right space-x-2">
                       <button
@@ -388,7 +399,7 @@ export default function BorrowersPage() {
                     value={
                       bookOptions.find(
                         (opt) => opt.value === formData.book_id,
-                      )|| null
+                      ) || null
                     }
                     onChange={(selected) =>
                       setFormData({
@@ -435,6 +446,7 @@ export default function BorrowersPage() {
                     placeholder="Enter time borrowed"
                   />
                 </div>
+
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
                     Time Return
