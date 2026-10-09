@@ -29,7 +29,7 @@ export async function DELETE(
 
    if (!id) {
      return NextResponse.json(
-       { success: false, message: 'Missing borrower ID parameter' },
+       { success: false, message: 'Missing book ID parameter' },
        { status: 400 }
      )
    }
@@ -117,10 +117,8 @@ export async function PUT(
      )
    }
 
-
  // Convert to Number(id) if your schema ID is an Int
    const targetId = id
-
 
    // 1. Verify the book exists
    const existingBook = await prisma.book.findUnique({

@@ -423,17 +423,19 @@ export default function BooksPage() {
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
                     Status
                   </label>
-                  <input
-                    type="text"
+                  <select
                     required
                     disabled={isSubmitting}
                     value={formData.status}
                     onChange={(e) =>
                       setFormData({ ...formData, status: e.target.value })
                     }
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all disabled:opacity-50"
-                    placeholder="Enter book status"
-                  />
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all disabled:opacity-50">
+                    <option value="" disabled>Status</option>
+                    <option value="Available">Available</option>
+                    <option value="Borrowed">Borrowed</option>
+                    <option value="Lost">Lost</option>
+                  </select>
                 </div>
 
                 <div className="pt-4 flex gap-3">
