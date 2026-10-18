@@ -25,32 +25,34 @@ export default function BorrowersPage() {
   const [search, setSearch] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [Books, setBooks] = useState<Book[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
   const itemsPerPage = 5;
 
   // Offcanvas state
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [currentBorrowerId, setCurrentBorrowerId] = useState<number | null>(
+  const [currentBorrowerId, setCurrentBorrowerId] = useState<string | null>(
     null,
   );
   const [formData, setFormData] = useState<{
     full_name: string;
     book_id: string;
-    no_hp: string;
-    time_borrow: string;
-    time_return: string;
+    no_hp: number;
+    time_borrow: Date;
+    time_return: Date;
   }>({
     full_name: "",
     book_id: "",
-    no_hp: "",
-    time_borrow: "",
-    time_return: "",
+    no_hp: 0,
+    time_borrow: new Date(),
+    time_return: new Date(),
   });
 
   // Initial load
-  useEffect(() => {
-    Promise.all([borrowerService.getAll(), bookService.getAll()])
+  useEffect(() => {reloadApi()}, []);
+  
+  const reloadApi = async () => {
+        Promise.all([borrowerService.getAll(), bookService.getAll()])
       .then(([borrowersData, booksData]) => {
         setBorrowers(borrowersData);
         setBooks(booksData);
@@ -62,9 +64,9 @@ export default function BorrowersPage() {
           text: error.message,
         });
       });
-  }, []);
+  };
 
-  const bookOptions: SelectOption[] = Books.map((book) => ({
+  const bookOptions: SelectOption[] = books.map((book) => ({
     value: String(book.id),
     label: book.full_name,
   }));
@@ -86,40 +88,41 @@ export default function BorrowersPage() {
     setFormData({
       full_name: "",
       book_id: "",
-      no_hp: "",
-      time_borrow: "",
-      time_return: "",
+      no_hp: 0,
+      time_borrow: new Date(),
+      time_return: new Date(),
     });
     setIsOffcanvasOpen(true);
   };
 
- const formatDateForInput = (date: Date | string | null | undefined): string => {
-  if (!date) return "";
+  const formatDateForInput = (date: Date | string | null | undefined): string => {
+    if (!date) return "";
 
-  const d = new Date(date);
-  if (isNaN(d.getTime())) return "";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
 
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
 
-  return `${year}-${month}-${day} ${hours}:${minutes}`; // Produces "YYYY-MM-DDTHH:mm"
-};
+    // Must use 'T' for datetime-local inputs to parse correctly
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
 
-const handleOpenEdit = (borrower: Borrower) => {
-  setIsEditing(true);
-  setCurrentBorrowerId(borrower.id);
-  setFormData({
-    full_name: borrower.full_name,
-    book_id: borrower.book_id,
-    no_hp: borrower.no_hp.toString(),
-    time_borrow: formatDateForInput(borrower.time_borrow),
-    time_return: formatDateForInput(borrower.time_return),
-  });
-  setIsOffcanvasOpen(true);
-};
+  const handleOpenEdit = (borrower: Borrower) => {
+    setIsEditing(true);
+    setCurrentBorrowerId(borrower.id);
+    setFormData({
+      full_name: borrower.full_name,
+      book_id: borrower.book_id,
+      no_hp: borrower.no_hp,
+      time_borrow: borrower.time_borrow,
+      time_return: borrower.time_return,
+    });
+    setIsOffcanvasOpen(true);
+  };
 
   // Unified Submit: POST or PUT
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -127,11 +130,16 @@ const handleOpenEdit = (borrower: Borrower) => {
     setIsSubmitting(true);
 
     try {
+      const payload = {
+        ...formData,
+        no_hp: Number(formData.no_hp),
+        
+      };
+
       if (isEditing && currentBorrowerId !== null) {
-        // API: PUT /api/borrowers/[id]
         const updated = await borrowerService.update(
           currentBorrowerId,
-          formData,
+          payload,
         );
         setBorrowers((prev) =>
           prev.map((borrower) =>
@@ -146,8 +154,7 @@ const handleOpenEdit = (borrower: Borrower) => {
           showConfirmButton: false,
         });
       } else {
-        // API: POST /api/borrowers
-        const created = await borrowerService.create(formData);
+        const created = await borrowerService.create(payload);
         setBorrowers((prev) => [created, ...prev]);
         Swal.fire({
           icon: "success",
@@ -157,6 +164,9 @@ const handleOpenEdit = (borrower: Borrower) => {
           showConfirmButton: false,
         });
       }
+
+      reloadApi();
+
       setIsOffcanvasOpen(false);
     } catch (error: any) {
       Swal.fire({ icon: "error", title: "Action Failed", text: error.message });
@@ -165,8 +175,7 @@ const handleOpenEdit = (borrower: Borrower) => {
     }
   };
 
-  // API: DELETE /api/borrowers/[id]
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     Swal.fire({
       title: "Delete Borrower?",
       text: "You cannot undo this action after it is deleted.",
@@ -246,6 +255,7 @@ const handleOpenEdit = (borrower: Borrower) => {
                 <th className="py-3.5 px-6">Book</th>
                 <th className="py-3.5 px-6">Time borrow</th>
                 <th className="py-3.5 px-6">Time return</th>
+                <th className="py-3.5 px-6">Duration</th>
                 <th className="py-3.5 px-6 text-right">Actions</th>
               </tr>
             </thead>
@@ -263,22 +273,18 @@ const handleOpenEdit = (borrower: Borrower) => {
                       {borrower.no_hp}
                     </td>
                     <td className="py-4 px-6 font-medium text-slate-800">
-                      {borrower.book_id}
+                      {borrower.book}
                     </td>
                     <td className="py-4 px-6 font-medium text-slate-800">
-                      {
-                        new Date(borrower.time_borrow)
-                          .toISOString()
-                          .split("T")[0]
-                      }
+                      {formatDateForInput(borrower.time_borrow).replace("T", " ")}
                     </td>
                     <td className="py-4 px-6 font-medium text-slate-800">
-                      {borrower.time_return
-                        ? new Date(borrower.time_return)
-                            .toISOString()
-                            .split("T")[0]
-                        : "-"}
+                      {formatDateForInput(borrower.time_return).replace("T", " ")}
                     </td>
+                    <td className="py-4 px-6 font-medium text-slate-800">
+                      3 hari
+                    </td>
+
                     <td className="py-4 px-6 text-right space-x-2">
                       <button
                         onClick={() => handleOpenEdit(borrower)}
@@ -381,7 +387,7 @@ const handleOpenEdit = (borrower: Borrower) => {
                     disabled={isSubmitting}
                     value={formData.no_hp}
                     onChange={(e) =>
-                      setFormData({ ...formData, no_hp: e.target.value })
+                      setFormData({ ...formData, no_hp: Number(e.target.value) })
                     }
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all disabled:opacity-50"
                     placeholder="Enter phone number"
@@ -424,7 +430,7 @@ const handleOpenEdit = (borrower: Borrower) => {
                       menu: (base) => ({
                         ...base,
                         borderRadius: "0.75rem",
-                        zIndex: 9999, // Keeps dropdown floating above the modal
+                        zIndex: 9999,
                       }),
                     }}
                   />
@@ -438,12 +444,11 @@ const handleOpenEdit = (borrower: Borrower) => {
                     type="datetime-local"
                     required
                     disabled={isSubmitting}
-                    value={formData.time_borrow}
+                    value={formatDateForInput(formData.time_borrow)}
                     onChange={(e) =>
-                      setFormData({ ...formData, time_borrow: e.target.value })
+                      setFormData({ ...formData, time_borrow: new Date(e.target.value) })
                     }
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all disabled:opacity-50"
-                    placeholder="Enter time borrowed"
                   />
                 </div>
 
@@ -454,14 +459,15 @@ const handleOpenEdit = (borrower: Borrower) => {
                   <input
                     type="datetime-local"
                     disabled={isSubmitting}
-                    value={formData.time_return}
+                    value={formatDateForInput(formData.time_return)}
                     onChange={(e) =>
-                      setFormData({ ...formData, time_return: e.target.value })
+                      setFormData({ ...formData, time_return: new Date(e.target.value) })
                     }
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all disabled:opacity-50"
-                    placeholder="Enter time to return"
                   />
                 </div>
+
+
 
                 <div className="pt-4 flex gap-3">
                   <button

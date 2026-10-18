@@ -98,7 +98,7 @@ export async function PUT(
  try {
    const { id } = await context.params
    const body = await request.json()
-   const { full_name } = body
+   const { full_name, no_hp, book_id, time_borrow, time_return } = body
 
 
    if (!id) {
@@ -157,6 +157,10 @@ export async function PUT(
      where: { id: targetId },
      data: {
        full_name: full_name.trim(),
+       no_hp: Number(no_hp),
+       book_id: book_id,
+       time_borrow: time_borrow,
+       time_return: time_return,
      },
      select: {
        id: true,

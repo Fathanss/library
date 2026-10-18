@@ -8,7 +8,6 @@ import {
   BookOpen,
   LogOut,
   UsersRound,
-  Clock,
   MapPin,
   LucideIcon,
   Sparkles,
@@ -35,7 +34,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Books', href: '/admin/book', icon: BookOpen },
     { name: 'Borrowers', href: '/admin/borrower', icon: UsersRound },
-    { name: 'History', href: '/admin/history', icon: Clock },
     { name: 'Locations', href: '/admin/location', icon: MapPin },
   ];
 

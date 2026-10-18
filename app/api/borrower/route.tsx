@@ -18,6 +18,7 @@ export async function GET() {
       select: {
         id: true,
         full_name: true,
+        book_id: true,
         book: true,
         no_hp: true,
         time_borrow: true,
@@ -80,6 +81,7 @@ export async function POST(request: Request) {
       select: {
         id: true,
         full_name: true,
+        book_id: true,
         book: true,
         no_hp: true,
         time_borrow: true,

@@ -22,6 +22,7 @@ export async function GET() {
         description: true,
         code_book: true,
         location: true,
+        location_id: true,
         status: true,
         created_at: true,
         updated_at: true,

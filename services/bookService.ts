@@ -1,7 +1,5 @@
-import { id } from "zod/locales";
-
 export interface Book {
- id: number;
+ id: string;
  full_name: string;
  description: string;
  code_book: string;
@@ -11,6 +9,11 @@ export interface Book {
 }
 
 export interface BookPayload {
+ full_name: string;
+ description: string;
+ code_book: string;
+ location_id: string;
+ status: string;
 }
 
 const BASE_URL = '/api/book';
@@ -38,7 +41,7 @@ export const bookService = {
    return result.data;
  },
  // Update existing book (PUT)
- async update(id: number, payload: BookPayload): Promise<Book> {
+ async update(id: string, payload: BookPayload): Promise<Book> {
    const res = await fetch(`${BASE_URL}/${id}`, {
      method: 'PUT',
      headers: { 'Content-Type': 'application/json' },
@@ -50,7 +53,7 @@ export const bookService = {
  },
 
  // Delete book (DELETE)
- async remove(id: number): Promise<void> {
+ async remove(id: string): Promise<void> {
    const res = await fetch(`${BASE_URL}/${id}`, {
      method: 'DELETE',
    });

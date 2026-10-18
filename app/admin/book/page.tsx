@@ -15,7 +15,6 @@ import Select from "react-select";
 import { Location, locationService } from "@/services/locationService";
 import { Book, bookService } from "@/services/bookService";
 
-// Format expected by react-select
 interface SelectOption {
   value: string;
   label: string;
@@ -32,7 +31,7 @@ export default function BooksPage() {
   // Offcanvas state
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [currentBookId, setCurrentBookId] = useState<number | null>(null);
+  const [currentBookId, setCurrentBookId] = useState<string | null>(null);
   const [formData, setFormData] = useState<{
     full_name: string;
     description: string;
@@ -67,6 +66,12 @@ export default function BooksPage() {
     value: String(loc.id),
     label: loc.full_name,
   }));
+
+  // Helper untuk mendapatkan nama lokasi berdasarkan location_id
+  const getLocationName = (locationId: string) => {
+    const loc = locations.find((l) => String(l.id) === String(locationId));
+    return loc ? loc.full_name : "-";
+  };
 
   // Filter & Pagination logic
   const filteredBooks = books.filter((book) =>
@@ -112,7 +117,6 @@ export default function BooksPage() {
 
     try {
       if (isEditing && currentBookId !== null) {
-        // API: PUT /api/books/[id]
         const updated = await bookService.update(currentBookId, formData);
         setBooks((prev) =>
           prev.map((book) => (book.id === currentBookId ? updated : book)),
@@ -125,7 +129,6 @@ export default function BooksPage() {
           showConfirmButton: false,
         });
       } else {
-        // API: POST /api/books
         const created = await bookService.create(formData);
         setBooks((prev) => [created, ...prev]);
         Swal.fire({
@@ -144,8 +147,7 @@ export default function BooksPage() {
     }
   };
 
-  // API: DELETE /api/books/[id]
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     Swal.fire({
       title: "Delete Book?",
       text: "You cannot undo this action after it is deleted.",
@@ -236,18 +238,22 @@ export default function BooksPage() {
                     <td className="py-4 px-6 font-medium text-slate-800">
                       {book.full_name}
                     </td>
-                    <td className="py-4 px-6 font-medium text-slate-800">
-                      {book.description}
+                    <td className="py-4 px-6 text-slate-600">
+                      {book.description || "-"}
                     </td>
-                    <td className="py-4 px-6 font-medium text-slate-800">
-                      {book.code_book}
+                    <td className="py-4 px-6 text-slate-600">
+                      {book.code_book || "-"}
                     </td>
-                    <td className="py-4 px-6 font-medium text-slate-800">
-                      {book.location}
+                    <td className="py-4 px-6 text-slate-600">
+                      {book.location || getLocationName(book.location_id)}
                     </td>
                     <td className="py-4 px-6">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${book.status === "available" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                          book.status === "Available"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
                       >
                         {book.status}
                       </span>
@@ -350,7 +356,6 @@ export default function BooksPage() {
                   </label>
                   <input
                     type="text"
-                    required
                     disabled={isSubmitting}
                     value={formData.description}
                     onChange={(e) =>
@@ -366,7 +371,6 @@ export default function BooksPage() {
                   </label>
                   <input
                     type="text"
-                    required
                     disabled={isSubmitting}
                     value={formData.code_book}
                     onChange={(e) =>
@@ -413,7 +417,7 @@ export default function BooksPage() {
                       menu: (base) => ({
                         ...base,
                         borderRadius: "0.75rem",
-                        zIndex: 9999, // Keeps dropdown floating above the modal
+                        zIndex: 9999,
                       }),
                     }}
                   />
@@ -430,8 +434,11 @@ export default function BooksPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, status: e.target.value })
                     }
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all disabled:opacity-50">
-                    <option value="" disabled>Status</option>
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all disabled:opacity-50"
+                  >
+                    <option value="" disabled>
+                      Select status
+                    </option>
                     <option value="Available">Available</option>
                     <option value="Borrowed">Borrowed</option>
                     <option value="Lost">Lost</option>
