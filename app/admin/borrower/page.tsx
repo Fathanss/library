@@ -20,6 +20,28 @@ interface SelectOption {
   label: string;
 }
 
+//fungsi helper format durasi di luar komponen
+export function formatDurasi(detik: number): string {
+  if (detik < 0) return "NULL";
+  
+  const menit = Math.floor(detik / 60);
+  const jam = Math.floor(menit / 60);
+  const hari = Math.floor(jam / 24);
+  const minggu = Math.floor(hari / 7);
+
+  if (detik < 60) {
+    return `${detik} detik`;
+  } else if (menit < 60) {
+    return `${menit} menit`;
+  } else if (jam < 24) {
+    return `${jam} jam`;
+  } else if (hari < 7) {
+    return `${hari} hari`;
+  } else (minggu < 4) 
+    return `${minggu} minggu`;
+  }
+
+
 export default function BorrowersPage() {
   const [borrowers, setBorrowers] = useState<Borrower[]>([]);
   const [search, setSearch] = useState<string>("");
@@ -49,10 +71,10 @@ export default function BorrowersPage() {
   });
 
   // Initial load
-  useEffect(() => {reloadApi()}, []);
+  useEffect(() => { reloadApi() }, []);
   
   const reloadApi = async () => {
-        Promise.all([borrowerService.getAll(), bookService.getAll()])
+    Promise.all([borrowerService.getAll(), bookService.getAll()])
       .then(([borrowersData, booksData]) => {
         setBorrowers(borrowersData);
         setBooks(booksData);
@@ -107,7 +129,6 @@ export default function BorrowersPage() {
     const hours = String(d.getHours()).padStart(2, "0");
     const minutes = String(d.getMinutes()).padStart(2, "0");
 
-    // Must use 'T' for datetime-local inputs to parse correctly
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
@@ -133,7 +154,6 @@ export default function BorrowersPage() {
       const payload = {
         ...formData,
         no_hp: Number(formData.no_hp),
-        
       };
 
       if (isEditing && currentBorrowerId !== null) {
@@ -166,7 +186,6 @@ export default function BorrowersPage() {
       }
 
       reloadApi();
-
       setIsOffcanvasOpen(false);
     } catch (error: any) {
       Swal.fire({ icon: "error", title: "Action Failed", text: error.message });
@@ -261,49 +280,56 @@ export default function BorrowersPage() {
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
               {paginatedBorrowers.length > 0 ? (
-                paginatedBorrowers.map((borrower) => (
-                  <tr
-                    key={borrower.id}
-                    className="hover:bg-slate-50/50 transition-colors"
-                  >
-                    <td className="py-4 px-6 font-medium text-slate-800">
-                      {borrower.full_name}
-                    </td>
-                    <td className="py-4 px-6 font-medium text-slate-800">
-                      {borrower.no_hp}
-                    </td>
-                    <td className="py-4 px-6 font-medium text-slate-800">
-                      {borrower.book}
-                    </td>
-                    <td className="py-4 px-6 font-medium text-slate-800">
-                      {formatDateForInput(borrower.time_borrow).replace("T", " ")}
-                    </td>
-                    <td className="py-4 px-6 font-medium text-slate-800">
-                      {formatDateForInput(borrower.time_return).replace("T", " ")}
-                    </td>
-                    <td className="py-4 px-6 font-medium text-slate-800">
-                      3 hari
-                    </td>
+                paginatedBorrowers.map((borrower) => {
+                  // rumus untuk menghitung durasi peminjaman
+                  const startTime = new Date(borrower.time_borrow).getTime();
+                  const returnTime = new Date(borrower.time_return).getTime();
+                  const diffMs = returnTime - startTime;
 
-                    <td className="py-4 px-6 text-right space-x-2">
-                      <button
-                        onClick={() => handleOpenEdit(borrower)}
-                        className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(borrower.id)}
-                        className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                  return (
+                    <tr
+                      key={borrower.id}
+                      className="hover:bg-slate-50/50 transition-colors"
+                    >
+                      <td className="py-4 px-6 font-medium text-slate-800">
+                        {borrower.full_name}
+                      </td>
+                      <td className="py-4 px-6 font-medium text-slate-800">
+                        {borrower.no_hp}
+                      </td>
+                      <td className="py-4 px-6 font-medium text-slate-800">
+                        {borrower.book}
+                      </td>
+                      <td className="py-4 px-6 font-medium text-slate-800">
+                        {formatDateForInput(borrower.time_borrow).replace("T", " ")}
+                      </td>
+                      <td className="py-4 px-6 font-medium text-slate-800">
+                        {formatDateForInput(borrower.time_return).replace("T", " ")}
+                      </td>
+                      <td className="py-4 px-6 font-medium text-slate-800">
+                        {formatDurasi(diffMs)}
+                      </td>
+
+                      <td className="py-4 px-6 text-right space-x-2">
+                        <button
+                          onClick={() => handleOpenEdit(borrower)}
+                          className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(borrower.id)}
+                          className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400">
+                  <td colSpan={7} className="py-8 text-center text-slate-400">
                     No borrowers found.
                   </td>
                 </tr>
@@ -466,8 +492,6 @@ export default function BorrowersPage() {
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all disabled:opacity-50"
                   />
                 </div>
-
-
 
                 <div className="pt-4 flex gap-3">
                   <button
