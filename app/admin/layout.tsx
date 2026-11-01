@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
+
 interface NavItem {
   name: string;
   href: string;
@@ -29,6 +30,7 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const navItems: NavItem[] = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -36,6 +38,34 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Borrowers', href: '/admin/borrower', icon: UsersRound },
     { name: 'Locations', href: '/admin/location', icon: MapPin },
   ];
+
+  const handleLogoutApi = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/logout', {
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Logged Out',
+          text: 'You have been successfully logged out',
+          timer: 1200,
+          showConfirmButton: false,
+        });
+        router.push('/login');
+        router.refresh(); // Refresh to clear server component cache
+      } else {
+        throw new Error('Failed to logout');
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      Swal.fire({ icon: 'error', title: 'Logout Failed', text: errorMessage });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     Swal.fire({
@@ -54,7 +84,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        router.push('/login');
+        handleLogoutApi();
       }
     });
   };

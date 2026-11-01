@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { cookies } from 'next/headers';
 
 
 const registerSchema = z.object({
@@ -37,6 +38,22 @@ export async function POST(request: Request) {
    }
 
    if (body.email == 'admin@idev.com' && body.password == 'password') {
+    // Simulated token for demonstration:
+    const accessToken = "your_generated_or_supabase_access_token_here";
+
+    // 2. Set the cookies so middleware.ts can read them
+    const cookieStore = await cookies();
+    
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      sameSite: 'lax' as const,
+    };
+
+    cookieStore.set('sb-access-token', accessToken, cookieOptions);
+    cookieStore.set('token', accessToken, cookieOptions);
      return NextResponse.json({ success: true, message: 'Login successful!' }, { status: 201 });
    }else {
      return NextResponse.json({ success: false, message: 'Email or password is wrong' }, { status: 400 });
