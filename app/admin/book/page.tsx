@@ -140,8 +140,15 @@ export default function BooksPage() {
         });
       }
       setIsOffcanvasOpen(false);
-    } catch (error: any) {
-      Swal.fire({ icon: "error", title: "Action Failed", text: error.message });
+    } catch (error: unknown) {
+      // Safely extract the error message from an unknown type
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Action Failed',
+        text: errorMessage,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -168,13 +175,16 @@ export default function BooksPage() {
             timer: 1500,
             showConfirmButton: false,
           });
-        } catch (error: any) {
-          Swal.fire({
-            icon: "error",
-            title: "Delete Failed",
-            text: error.message,
-          });
-        }
+        } catch (error: unknown) {
+      // Safely extract the error message from an unknown type
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Action Failed',
+        text: errorMessage,
+      });
+    }
       }
     });
   };
