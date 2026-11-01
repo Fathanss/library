@@ -4,7 +4,6 @@ import { PrismaPg } from '@prisma/adapter-pg'
 
 // Import your custom seeders
 import { seedUsers } from './seeders/userSeeder'
-import { seedLocations } from './seeders/locationSeeder'
 
 
 const connectionString = process.env.DATABASE_URL
@@ -24,8 +23,6 @@ async function main() {
  // Run seeders sequentially
  // (Order matters if location data depends on users, or vice versa)
  await seedUsers(prisma)
- await seedLocations(prisma)
-
 
  console.log('\n All seeders completed successfully!')
 }
