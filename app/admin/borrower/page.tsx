@@ -21,7 +21,7 @@ interface SelectOption {
 }
 
 //fungsi helper format durasi di luar komponen
-export function formatDurasi(detik: number): string {
+const formatDurasi = (detik: number): string => {
   if (detik < 0) return "NULL";
   
   const menit = Math.floor(detik / 60);
@@ -37,10 +37,12 @@ export function formatDurasi(detik: number): string {
     return `${jam} jam`;
   } else if (hari < 7) {
     return `${hari} hari`;
-  } else (minggu < 4) 
+  } else if (minggu < 4) {
     return `${minggu} minggu`;
+  } else {
+    return "NULL";
   }
-
+};
 
 export default function BorrowersPage() {
   const [borrowers, setBorrowers] = useState<Borrower[]>([]);
