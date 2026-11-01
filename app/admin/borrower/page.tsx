@@ -21,28 +21,48 @@ interface SelectOption {
 }
 
 //fungsi helper format durasi di luar komponen
-const formatDurasi = (detik: number): string => {
-  if (detik < 0) return "NULL";
-  
-  const menit = Math.floor(detik / 60);
-  const jam = Math.floor(menit / 60);
-  const hari = Math.floor(jam / 24);
-  const minggu = Math.floor(hari / 7);
+const formatDurasi = (totalDetik: number): string => {
+  if (totalDetik < 0) return "Belum dikembalikan";
 
-  if (detik < 60) {
-    return `${detik} detik`;
-  } else if (menit < 60) {
-    return `${menit} menit`;
-  } else if (jam < 24) {
-    return `${jam} jam`;
-  } else if (hari < 7) {
-    return `${hari} hari`;
-  } else if (minggu < 4) {
-    return `${minggu} minggu`;
-  } else {
-    return "NULL";
-  }
+
+  // Define conversion constants in seconds
+  const DETIK_PER_MENIT = 60;
+  const DETIK_PER_JAM = 3600;
+  const DETIK_PER_HARI = 86400;
+  const DETIK_PER_BULAN = 2592000; // Approximation: 30 days
+  const DETIK_PER_TAHUN = 31536000; // Approximation: 365 days
+
+  const tahun = Math.floor(totalDetik / DETIK_PER_TAHUN);
+  totalDetik %= DETIK_PER_TAHUN;
+
+  const bulan = Math.floor(totalDetik / DETIK_PER_BULAN);
+  totalDetik %= DETIK_PER_BULAN;
+
+  const hari = Math.floor(totalDetik / DETIK_PER_HARI);
+  totalDetik %= DETIK_PER_HARI;
+
+  const jam = Math.floor(totalDetik / DETIK_PER_JAM);
+  totalDetik %= DETIK_PER_JAM;
+
+  const menit = Math.floor(totalDetik / DETIK_PER_MENIT);
+  const detik = totalDetik % DETIK_PER_MENIT;
+
+  // Collect all non-zero parts
+  const parts: string[] = [];
+  if (tahun > 0) parts.push(`${tahun} tahun`);
+  if (bulan > 0) parts.push(`${bulan} bulan`);
+  if (hari > 0) parts.push(`${hari} hari`);
+  if (jam > 0) parts.push(`${jam} jam`);
+  if (menit > 0) parts.push(`${menit} menit`);
+  if (detik > 0 || parts.length === 0) parts.push(`${detik} detik`);
+
+  // Take up to the top 3 largest parts for clean readability
+  return parts.slice(0, 3).join(' ');
 };
+
+// Example usage:
+// formatDurasi(90061); // Output: "1 hari 1 jam 1 menit"
+// formatDurasi(5000000); // Output: "1 bulan 27 hari 3 jam"
 
 export default function BorrowersPage() {
   const [borrowers, setBorrowers] = useState<Borrower[]>([]);
@@ -297,6 +317,7 @@ export default function BorrowersPage() {
                   const startTime = new Date(borrower.time_borrow).getTime();
                   const returnTime = new Date(borrower.time_return).getTime();
                   const diffMs = returnTime - startTime;
+                  const totalSeconds = Math.floor(diffMs / 1000);
 
                   return (
                     <tr
@@ -319,7 +340,7 @@ export default function BorrowersPage() {
                         {formatDateForInput(borrower.time_return).replace("T", " ")}
                       </td>
                       <td className="py-4 px-6 font-medium text-slate-800">
-                        {formatDurasi(diffMs)}
+                        {formatDurasi(totalSeconds)}
                       </td>
 
                       <td className="py-4 px-6 text-right space-x-2">
