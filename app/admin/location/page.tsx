@@ -205,7 +205,7 @@ export default function LocationsPage() {
                     <td className="py-4 px-6 font-medium text-slate-800">
                       {loc.full_name}
                     </td>
-                    <td className="py-4 px-6 text-slate-800">
+                    <td className="py-4 px-6 font-medium text-slate-800">
                       {loc.type_book}
                     </td>
                     <td className="py-4 px-6 text-right space-x-2">
