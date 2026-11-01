@@ -1,11 +1,13 @@
 export interface Location {
  id: string;
  full_name: string;
+ type_book: string;
  created_at: string;
 }
 
 export interface LocationPayload {
  full_name: string;
+ type_book: string;
 }
 
 const BASE_URL = '/api/location';
@@ -32,7 +34,7 @@ export const locationService = {
    return result.data;
  },
  // Update existing location (PUT)
- async update(id: number, payload: LocationPayload): Promise<Location> {
+ async update(id: string, payload: LocationPayload): Promise<Location> { // EDITED
    const res = await fetch(`${BASE_URL}/${id}`, {
      method: 'PUT',
      headers: { 'Content-Type': 'application/json' },
@@ -44,7 +46,7 @@ export const locationService = {
  },
 
  // Delete location (DELETE)
- async remove(id: number): Promise<void> {
+ async remove(id: string): Promise<void> { // EDITED
    const res = await fetch(`${BASE_URL}/${id}`, {
      method: 'DELETE',
    });

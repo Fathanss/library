@@ -64,6 +64,7 @@ export async function DELETE(
      select: {
        id: true,
        full_name: true,
+       type_book: true,
        created_at: true,
        updated_at: true,
      },
@@ -96,7 +97,7 @@ export async function PUT(
  try {
    const { id } = await context.params
    const body = await request.json()
-   const { full_name } = body
+   const { full_name, type_book } = body
 
 
    if (!id) {
@@ -155,10 +156,12 @@ export async function PUT(
      where: { id: targetId },
      data: {
        full_name: full_name.trim(),
+       type_book: type_book,
      },
      select: {
        id: true,
        full_name: true,
+       type_book: true,
        created_at: true,
        updated_at: true,
      },

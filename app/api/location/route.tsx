@@ -19,6 +19,7 @@ export async function GET() {
       select: {
         id: true,
         full_name: true,
+        type_book: true,
         created_at: true,
         updated_at: true,
       },
@@ -41,7 +42,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { full_name } = body
+    const { full_name, type_book } = body
 
     if (!full_name) {
       return NextResponse.json(
@@ -65,15 +66,17 @@ export async function POST(request: Request) {
     const newUser = await prisma.location.create({
       data: {
         full_name,
+        type_book,
       },
       select: {
         id: true,
         full_name: true,
+        type_book: true,
         created_at: true,
         updated_at: true,
       },
     })
-
+  
     return NextResponse.json(
       { success: true, message: 'Location created successfully', data: newUser },
       { status: 201 }

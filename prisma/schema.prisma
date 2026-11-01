@@ -51,6 +51,8 @@ model location {
   full_name  String    @db.VarChar(100)
   created_at DateTime? @default(now()) @db.Timestamptz(6)
   updated_at DateTime? @db.Timestamptz(6)
+  type_book  String    @db.VarChar(100)
+
   book       book[]
 }
 
